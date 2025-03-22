@@ -1,2 +1,2 @@
 # km-color
-this package is color generator
+Description:this package is color generator
