@@ -16,12 +16,16 @@ const useColorGenerator = () => {
     method: KEY,
     reverse: boolean = false
   ) => {
+    // @ts-ignore
     let list = Array.from({ length: grade }).map((item, index) => {
       let gradeNumber = index + 1;
       const gradeValue = (max / grade) * gradeNumber;
-      return make(color)
-        [method](reverse == true ? 1 - gradeValue : gradeValue)
-        .hexa();
+      return (
+        make(color)
+          [method](reverse == true ? 1 - gradeValue : gradeValue)
+          // @ts-ignore
+          .hexa()
+      );
     });
     return list;
   };
