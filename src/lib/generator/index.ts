@@ -1,150 +1,348 @@
 import Color from 'color';
-import convert from 'color-convert';
 import _ from 'lodash';
 import { KMColorGenerator } from './schema';
 
-const useColorGenerator = () => {
-  const make = Color;
-  const converter = convert;
+const make = Color;
 
-  const makeGrades = <
-    KEY extends 'darken' | 'lighten' | 'alpha' | 'fade' | 'opaquer' | 'whiten' | 'blacken'
-  >(
-    color: KMColorGenerator.IColorLike,
-    grade: KMColorGenerator.IGrades,
-    max: KMColorGenerator.IMax = 0.7,
-    method: KEY,
-    reverse: boolean = false
-  ) => {
-    // @ts-ignore
-    let list = Array.from({ length: grade }).map((item, index) => {
-      let gradeNumber = index + 1;
-      const gradeValue = (max / grade) * gradeNumber;
-      return (
-        make(color)
-          [method](reverse == true ? 1 - gradeValue : gradeValue)
-          // @ts-ignore
-          .hexa()
-      );
-    });
-    return list;
-  };
-
-  const makeColors = (
-    colors: { name: string; color: KMColorGenerator.IColorLike }[],
-    entryOptions: Partial<KMColorGenerator.IMakeColorOptions> = {}
-  ) => {
-    const options: KMColorGenerator.IMakeColorOptions = {
-      grades: 4,
-      max: 0.7,
-      darken: true,
-      lighten: true,
-      fade: true,
-      alpha: false,
-      opaquer: false,
-      whiten: false,
-      blacken: false,
-      ...entryOptions,
-    };
-    let output = colors.map((item) => {
-      const baseColor = make(item.color);
-      const reverseColor = baseColor.negate();
-      const grayScale = baseColor.grayscale();
-      const colorMode: KMColorGenerator.IColorMode =
-        baseColor.luminosity() > 0.5 ? 'light' : 'dark';
-      const useIn =
-        colorMode == 'dark'
-          ? 'use this color between light colors'
-          : 'use this color between dark colors';
-      return {
-        name: item.name,
-        base: baseColor.hexa(),
-        reverseColor: reverseColor.hexa(),
-        grayScale: grayScale.hexa(),
-        colorMode,
-        useIn,
-        grades: {
-          ...(options.darken && {
-            darken: [...makeGrades(baseColor, options.grades, options.max, 'darken')],
-          }),
-          ...(options.lighten && {
-            lighten: [...makeGrades(baseColor, options.grades, options.max, 'lighten')],
-          }),
-          ...(options.fade && {
-            fade: [...makeGrades(baseColor, options.grades, options.max, 'fade')],
-          }),
-          ...(options.opaquer && {
-            opaquer: [...makeGrades(baseColor, options.grades, options.max, 'opaquer')],
-          }),
-          ...(options.whiten && {
-            whiten: [...makeGrades(baseColor, options.grades, options.max, 'whiten')],
-          }),
-          ...(options.blacken && {
-            blacken: [...makeGrades(baseColor, options.grades, options.max, 'blacken')],
-          }),
-          ...(options.alpha && {
-            alpha: [...makeGrades(baseColor, options.grades, options.max, 'alpha')],
-          }),
-        },
-      };
-    });
-    return output;
-  };
-
-  const makeCssVariables = (config: ReturnType<typeof makeColors>, prefix: string = '--t-') => {
-    let colorVariables = config.map((item) => {
-      let grades = Object.entries(item.grades);
-      let gradesCreated = grades.map((grade) => {
-        let values = grade[1];
-        let gradeName = grade[0];
-        return values.map((item, index) => {
-          const gradeNumber = index + 1;
-          return {
-            gradeName: `${gradeName}-${gradeNumber}`,
-            value: item,
-          };
-        });
-      });
-      let flattenGrades = _.flatten(gradesCreated);
-      const cssProperties = flattenGrades.map((flattenGrade) => {
-        return {
-          [`${prefix}${item.name}-${flattenGrade.gradeName}`]: flattenGrade.value,
-        };
-      });
-
-      return {
-        [`${prefix}${item.name}-base`]: item.base,
-        ..._.merge({}, ...cssProperties),
-      };
-    });
-    let asObject = _.merge({}, ...colorVariables);
+const makeGradesAsObject = <
+  NAME extends string,
+  GM extends KMColorGenerator.IGradeMode = KMColorGenerator.IGradeMode,
+  GL extends KMColorGenerator.IGradeLevel = KMColorGenerator.IGradeLevel,
+  SPLITER extends KMColorGenerator.ISpliter = '_',
+  MAX extends KMColorGenerator.IMax = '0.7'
+>(
+  name: NAME,
+  color: KMColorGenerator.IColorLike,
+  gradeLevel: GL,
+  spliter: SPLITER,
+  method: GM,
+  max: MAX,
+  reverse: boolean = false
+) => {
+  // @ts-ignore
+  let list = Array.from({ length: Number(gradeLevel) }).map((item, index) => {
+    let gradeNumber = index + 1;
+    const gradeValue = (Number(max) / Number(gradeLevel)) * gradeNumber;
 
     return {
-      asObject,
-      asString: objectToCssString(asObject),
+      ...(name !== ''
+        ? {
+            [`${name}${spliter}${method}${spliter}${index + 1}`]: make(color)
+              [method](reverse == true ? 1 - gradeValue : gradeValue)
+              // @ts-ignore
+              .hexa(),
+          }
+        : {
+            [`${method}${spliter}${index + 1}`]: make(color)
+              [method](reverse == true ? 1 - gradeValue : gradeValue)
+              // @ts-ignore
+              .hexa(),
+          }),
     };
+  });
+  return _.merge({}, ...list) as KMColorGenerator.IColorOutput<GM, GL, SPLITER, NAME>['grades'];
+};
+
+const makeColor = <
+  COLOR extends KMColorGenerator.IColorLike,
+  GRADELEVEL extends KMColorGenerator.IGradeLevel = '4',
+  PREFIX extends string = '',
+  SPLITER extends KMColorGenerator.ISpliter = '_',
+  MAX extends KMColorGenerator.IMax = '0.7',
+  DARKEN extends KMColorGenerator.IGradeStatus = 'YES',
+  LIGHTEN extends KMColorGenerator.IGradeStatus = 'YES',
+  ALPHA extends KMColorGenerator.IGradeStatus = 'YES',
+  FADE extends KMColorGenerator.IGradeStatus = 'YES',
+  OPAQUER extends KMColorGenerator.IGradeStatus = 'YES',
+  WHITEN extends KMColorGenerator.IGradeStatus = 'YES',
+  BLACKEN extends KMColorGenerator.IGradeStatus = 'YES'
+>(
+  color: COLOR,
+  entryOptions: Partial<KMColorGenerator.IColorOptions<GRADELEVEL, MAX, SPLITER, PREFIX>>,
+  gradeOptions: Partial<
+    KMColorGenerator.IGradeOptions<DARKEN, LIGHTEN, ALPHA, FADE, OPAQUER, WHITEN, BLACKEN>
+  >
+) => {
+  const options: KMColorGenerator.IColorOptions<GRADELEVEL, MAX, SPLITER, PREFIX> = {
+    gradeLevel: '4' as GRADELEVEL,
+    max: '0.7' as MAX,
+    prefix: '' as PREFIX,
+    spliter: '_' as SPLITER,
+    ...entryOptions,
   };
 
-  const objectToCssString = (object: object) => {
-    return JSON.stringify(object)
-      .split(',')
-      .join(';')
-      .split('{')
-      .join('')
-      .split('}')
-      .join('')
-      .split('"')
-      .join('');
-  };
+  const baseColor = make(color);
+  const reverseColor = baseColor.negate();
+  const grayScale = baseColor.grayscale();
+  const colorMode: KMColorGenerator.IColorMode = baseColor.luminosity() > 0.5 ? 'light' : 'dark';
+  const useIn =
+    colorMode == 'dark'
+      ? 'use this color between light colors'
+      : 'use this color between dark colors';
+
+  let darkenGrades = {
+    ...(gradeOptions.darken == 'YES' && {
+      ...makeGradesAsObject(
+        options.prefix,
+        baseColor,
+        options.gradeLevel,
+        options.spliter,
+        'darken',
+        options.max
+      ),
+    }),
+  } as DARKEN extends 'YES'
+    ? KMColorGenerator.IColorOutput<'darken', GRADELEVEL, SPLITER, PREFIX>['grades']
+    : {};
+  let lightenGrades = {
+    ...(gradeOptions.lighten == 'YES' && {
+      ...makeGradesAsObject(
+        options.prefix,
+        baseColor,
+        options.gradeLevel,
+        options.spliter,
+        'lighten',
+        options.max
+      ),
+    }),
+  } as LIGHTEN extends 'YES'
+    ? KMColorGenerator.IColorOutput<'lighten', GRADELEVEL, SPLITER, PREFIX>['grades']
+    : {};
+  let alphaGrades = {
+    ...(gradeOptions.alpha == 'YES' && {
+      ...makeGradesAsObject(
+        options.prefix,
+        baseColor,
+        options.gradeLevel,
+        options.spliter,
+        'alpha',
+        options.max
+      ),
+    }),
+  } as ALPHA extends 'YES'
+    ? KMColorGenerator.IColorOutput<'alpha', GRADELEVEL, SPLITER, PREFIX>['grades']
+    : {};
+  let fadeGrades = {
+    ...(gradeOptions.fade == 'YES' && {
+      ...makeGradesAsObject(
+        options.prefix,
+        baseColor,
+        options.gradeLevel,
+        options.spliter,
+        'fade',
+        options.max
+      ),
+    }),
+  } as FADE extends 'YES'
+    ? KMColorGenerator.IColorOutput<'fade', GRADELEVEL, SPLITER, PREFIX>['grades']
+    : {};
+  let opaquerGrades = {
+    ...(gradeOptions.opaquer == 'YES' && {
+      ...makeGradesAsObject(
+        options.prefix,
+        baseColor,
+        options.gradeLevel,
+        options.spliter,
+        'opaquer',
+        options.max
+      ),
+    }),
+  } as OPAQUER extends 'YES'
+    ? KMColorGenerator.IColorOutput<'opaquer', GRADELEVEL, SPLITER, PREFIX>['grades']
+    : {};
+  let whitenGrades = {
+    ...(gradeOptions.whiten == 'YES' && {
+      ...makeGradesAsObject(
+        options.prefix,
+        baseColor,
+        options.gradeLevel,
+        options.spliter,
+        'whiten',
+        options.max
+      ),
+    }),
+  } as WHITEN extends 'YES'
+    ? KMColorGenerator.IColorOutput<'whiten', GRADELEVEL, SPLITER, PREFIX>['grades']
+    : {};
+  let blackenGrades = {
+    ...(gradeOptions.blacken == 'YES' && {
+      ...makeGradesAsObject(
+        options.prefix,
+        baseColor,
+        options.gradeLevel,
+        options.spliter,
+        'blacken',
+        options.max
+      ),
+    }),
+  } as BLACKEN extends 'YES'
+    ? KMColorGenerator.IColorOutput<'blacken', GRADELEVEL, SPLITER, PREFIX>['grades']
+    : {};
 
   return {
-    converter,
-    make,
-    // makeGrades,
-    makeColors,
-    makeCssVariables,
-    // objectToCssString,
+    baseColor: baseColor.hexa(),
+    reverseColor: reverseColor.hexa(),
+    grayScale: grayScale.hexa(),
+    colorMode,
+    useIn,
+    spliter: options.spliter,
+    grades: {
+      ...darkenGrades,
+      ...lightenGrades,
+      ...alphaGrades,
+      ...fadeGrades,
+      ...opaquerGrades,
+      ...whitenGrades,
+      ...blackenGrades,
+    },
   };
 };
 
-export default { use: useColorGenerator };
+const makePalette = <
+  COLORS extends KMColorGenerator.IPalleteInput,
+  GRADELEVEL extends KMColorGenerator.IGradeLevel = '4',
+  PREFIX extends string = '',
+  SPLITER extends KMColorGenerator.ISpliter = '_',
+  MAX extends KMColorGenerator.IMax = '0.7',
+  DARKEN extends KMColorGenerator.IGradeStatus = 'YES',
+  LIGHTEN extends KMColorGenerator.IGradeStatus = 'YES',
+  ALPHA extends KMColorGenerator.IGradeStatus = 'YES',
+  FADE extends KMColorGenerator.IGradeStatus = 'NO',
+  OPAQUER extends KMColorGenerator.IGradeStatus = 'NO',
+  WHITEN extends KMColorGenerator.IGradeStatus = 'NO',
+  BLACKEN extends KMColorGenerator.IGradeStatus = 'NO'
+>(
+  colors: COLORS,
+  entryOptions: Partial<
+    KMColorGenerator.IPaletteOptions<
+      GRADELEVEL,
+      MAX,
+      SPLITER,
+      PREFIX,
+      DARKEN,
+      LIGHTEN,
+      ALPHA,
+      FADE,
+      OPAQUER,
+      WHITEN,
+      BLACKEN
+    >
+  >
+) => {
+  let options: KMColorGenerator.IPaletteOptions<
+    GRADELEVEL,
+    MAX,
+    SPLITER,
+    PREFIX,
+    DARKEN,
+    LIGHTEN,
+    ALPHA,
+    FADE,
+    OPAQUER,
+    WHITEN,
+    BLACKEN
+  > = {
+    gradeLevel: '4',
+    max: '0.7',
+    spliter: '_',
+    prefix: '' as PREFIX,
+    darken: 'YES',
+    lighten: 'YES',
+    alpha: 'YES',
+    fade: 'NO',
+    opaquer: 'NO',
+    whiten: 'NO',
+    blacken: 'NO',
+    ...entryOptions,
+  };
+
+  let output = {} as Record<
+    keyof COLORS,
+    ReturnType<
+      typeof makeColor<
+        KMColorGenerator.IColorLike,
+        GRADELEVEL,
+        PREFIX,
+        SPLITER,
+        MAX,
+        DARKEN,
+        LIGHTEN,
+        ALPHA,
+        FADE,
+        OPAQUER,
+        WHITEN,
+        BLACKEN
+      >
+    >
+  >;
+  for (const _key in colors) {
+    if (Object.prototype.hasOwnProperty.call(colors, _key)) {
+      const colorValue = colors[_key];
+      let colorName = _key;
+      output[colorName] = makeColor(
+        colorValue,
+        {
+          gradeLevel: options.gradeLevel,
+          max: options.max,
+          prefix: options.prefix,
+          spliter: options.spliter,
+        },
+        {
+          darken: options.darken,
+          lighten: options.lighten,
+          alpha: options.alpha,
+          fade: options.fade,
+          opaquer: options.opaquer,
+          whiten: options.whiten,
+          blacken: options.blacken,
+        }
+      );
+    }
+  }
+
+  return output;
+};
+
+const cssVariableAsObjectToCssString = (object: object) => {
+  return JSON.stringify(object)
+    .split(',')
+    .join(';')
+    .split('{')
+    .join('')
+    .split('}')
+    .join('')
+    .split('"')
+    .join('');
+};
+
+const makeCssVariablesFromPalette = (palette: ReturnType<typeof makePalette>) => {
+  let output = {} as any;
+  for (const colorName in palette) {
+    if (Object.prototype.hasOwnProperty.call(palette, colorName)) {
+      const colorContent = palette[colorName];
+      const base = colorContent.baseColor;
+      output[`--${colorName}${colorContent.spliter}base`] = base;
+      for (const gradeName in colorContent.grades) {
+        if (Object.prototype.hasOwnProperty.call(colorContent.grades, gradeName)) {
+          // @ts-ignore
+          const gradeValue = colorContent.grades[gradeName];
+          output[`--${colorName}${colorContent.spliter}${gradeName}`] = gradeValue;
+        }
+      }
+    }
+  }
+  return output;
+};
+
+const paletteToCssVariables = (palette: ReturnType<typeof makePalette>) => {
+  return {
+    asObject: makeCssVariablesFromPalette(palette),
+    asString: cssVariableAsObjectToCssString(makeCssVariablesFromPalette(palette)),
+  };
+};
+
+export default {
+  makeColor,
+  makePalette,
+  paletteToCssVariables,
+};
