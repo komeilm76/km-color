@@ -336,8 +336,8 @@ const makeCssVariablesFromPalette = (palette: ReturnType<typeof makePalette>) =>
 
 const paletteToCssVariables = (palette: ReturnType<typeof makePalette>) => {
   return {
-    asObject: makeCssVariablesFromPalette(palette),
-    asString: cssVariableAsObjectToCssString(makeCssVariablesFromPalette(palette)),
+    asObject: () => makeCssVariablesFromPalette(palette),
+    asString: () => cssVariableAsObjectToCssString(makeCssVariablesFromPalette(palette)),
   };
 };
 
