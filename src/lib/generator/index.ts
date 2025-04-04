@@ -341,31 +341,31 @@ const paletteToCssVariables = (palette: ReturnType<typeof makePalette>) => {
   };
 };
 
-type ITheme<PALETTE extends ReturnType<typeof makePalette>> = {
-  palette: PALETTE;
-  // comming soon
-  // shadows: Record<string, string>;
-  // typography: Record<string, string>;
-  // breakpoints: Record<string, string>;
-  // spacing: Record<string, string>;
-  // borderRadius: Record<string, string>;
-  // transitions: Record<string, string>;
-};
+// type ITheme<PALETTE extends ReturnType<typeof makePalette>> = {
+//   palette: PALETTE;
+//   // comming soon
+//   // shadows: Record<string, string>;
+//   // typography: Record<string, string>;
+//   // breakpoints: Record<string, string>;
+//   // spacing: Record<string, string>;
+//   // borderRadius: Record<string, string>;
+//   // transitions: Record<string, string>;
+// };
 
-type IThemeEntry<
-  PALETTE extends ReturnType<typeof makePalette>,
-  NAMES extends string = string
-> = Record<NAMES, ITheme<PALETTE>>;
+// type IThemeEntry<
+//   PALETTE extends ReturnType<typeof makePalette>,
+//   NAMES extends string = string
+// > = Record<NAMES, ITheme<PALETTE>>;
 
-const makeThemes = <PALETTE extends ReturnType<typeof makePalette>, NAMES extends string>(
-  themes: IThemeEntry<PALETTE, NAMES>
-) => {
-  return themes;
-};
+// const makeThemes = <PALETTE extends ReturnType<typeof makePalette>, NAMES extends string>(
+//   themes: IThemeEntry<PALETTE, NAMES>
+// ) => {
+//   return themes;
+// };
 
 export default {
   makeColor,
   makePalette,
   paletteToCssVariables,
-  makeThemes,
+  // makeThemes,
 };
