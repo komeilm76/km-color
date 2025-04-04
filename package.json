@@ -1,6 +1,6 @@
 {
   "name": "km-color",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "this package is color generator",
   "main": "build/main/index.js",
   "typings": "build/main/index.d.ts",
