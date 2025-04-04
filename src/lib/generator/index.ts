@@ -403,10 +403,15 @@ const registerThemes = <
   return {
     activeTheme,
     activeThemeType,
-    activeThemeVariables: computed({ activeTheme, activeThemeType }, () => {
-      // @ts-ignore
-      return variables[activeTheme.value][activeThemeType.value];
-    }),
+    activeThemeVariables: computed<ReturnType<typeof paletteToCssVariables>>(
+      { activeTheme, activeThemeType },
+      () => {
+        // @ts-ignore
+        return variables[activeTheme.value][activeThemeType.value] as ReturnType<
+          typeof paletteToCssVariables
+        >;
+      }
+    ),
     setTheme(theme: THEMES) {
       activeTheme.setHard(theme);
     },

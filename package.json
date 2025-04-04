@@ -39,7 +39,7 @@
     "color": "^5.0.0",
     "color-convert": "^3.0.1",
     "cross-env": "^7.0.3",
-    "km-fresh": "^0.2.11",
+    "km-fresh": "^0.2.12",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
