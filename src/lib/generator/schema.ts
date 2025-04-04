@@ -253,5 +253,6 @@ export namespace KMColorGenerator {
     whiten: WHITEN | IGradeStatus;
     blacken: BLACKEN | IGradeStatus;
   };
+
   export type IColorLike = ColorLike;
 }
