@@ -1,7 +1,7 @@
 import Color from 'color';
 import _ from 'lodash';
 import { KMColorGenerator } from './schema';
-import { ref } from 'km-fresh';
+import { computed, ref } from 'km-fresh';
 
 const make = Color;
 
@@ -403,6 +403,10 @@ const registerThemes = <
   return {
     activeTheme,
     activeThemeType,
+    activeThemeVariables: computed({ activeTheme, activeThemeType }, () => {
+      // @ts-ignore
+      return variables[activeTheme.value][activeThemeType.value];
+    }),
     setTheme(theme: THEMES) {
       activeTheme.setHard(theme);
     },
@@ -418,10 +422,7 @@ const registerThemes = <
     getActiveThemeName() {
       return activeTheme.value;
     },
-    getThemeVariables() {
-      // @ts-ignore
-      return variables[activeTheme.value][activeThemeType.value];
-    },
+
     getThemeNameList() {
       return Object.keys(entryThemes).map((theme) => {
         return theme;
