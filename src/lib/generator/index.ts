@@ -1,6 +1,7 @@
 import Color from 'color';
 import _ from 'lodash';
 import { KMColorGenerator } from './schema';
+import { ref } from 'km-fresh';
 
 const make = Color;
 
@@ -362,10 +363,83 @@ const paletteToCssVariables = (palette: ReturnType<typeof makePalette>) => {
 // ) => {
 //   return themes;
 // };
+const registerThemes = <
+  OBJECT extends Object,
+  THEMES extends keyof OBJECT,
+  THEMETYPES extends keyof OBJECT[THEMES]
+>(
+  entryThemes: OBJECT,
+  defaultTheme: THEMES,
+  defaultThemeType: THEMETYPES
+) => {
+  const activeTheme = ref<THEMES>(defaultTheme);
+  const activeThemeType = ref<THEMETYPES>(defaultThemeType);
+
+  let variables = {};
+  for (const themeName in entryThemes) {
+    if (Object.prototype.hasOwnProperty.call(entryThemes, themeName)) {
+      let themeType = entryThemes[themeName];
+      // @ts-ignore
+      variables[themeName] = {};
+      for (const themeKey in themeType) {
+        if (Object.prototype.hasOwnProperty.call(themeType, themeKey)) {
+          const themeValue = themeType[themeKey];
+          // @ts-ignore
+          variables[themeName][themeKey] = paletteToCssVariables(themeValue);
+        }
+      }
+    }
+  }
+  // let variables = {
+  //   wood: {
+  //     dark: kmColor.paletteToCssVariables(themes.wood.dark),
+  //     light: kmColor.paletteToCssVariables(themes.wood.light),
+  //   },
+  //   pastele: {
+  //     dark: kmColor.paletteToCssVariables(themes.pastele.dark),
+  //     light: kmColor.paletteToCssVariables(themes.pastele.light),
+  //   },
+  // }
+  return {
+    activeTheme,
+    activeThemeType,
+    setTheme(theme: THEMES) {
+      activeTheme.setHard(theme);
+    },
+    setThemeType(themeType: THEMETYPES) {
+      activeThemeType.setHard(themeType);
+    },
+    getActiveTheme() {
+      return entryThemes[activeTheme.value][activeThemeType.value];
+    },
+    getActiveThemeType() {
+      return activeThemeType.value;
+    },
+    getActiveThemeName() {
+      return activeTheme.value;
+    },
+    getThemeVariables() {
+      // @ts-ignore
+      return variables[activeTheme.value][activeThemeType.value];
+    },
+    getThemeNameList() {
+      return Object.keys(entryThemes).map((theme) => {
+        return theme;
+      }) as THEMES[];
+    },
+    getThemeTypeList() {
+      // @ts-ignore
+      return Object.keys(entryThemes[activeTheme.value]).map((themeType) => {
+        return themeType;
+      }) as THEMETYPES[];
+    },
+  };
+};
 
 export default {
-  makeColor,
+  // makeColor,
   makePalette,
-  paletteToCssVariables,
+  registerThemes,
+  // paletteToCssVariables,
   // makeThemes,
 };
