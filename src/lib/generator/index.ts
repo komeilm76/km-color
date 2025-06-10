@@ -1,6 +1,7 @@
 import Color from 'color';
 import _ from 'lodash';
 import { KMColorGenerator } from './schema';
+// @ts-ignore
 import { computed, ref } from 'km-fresh';
 
 const make = Color;
@@ -47,9 +48,9 @@ const makeGradesAsObject = <
 const makeColor = <
   COLOR extends KMColorGenerator.IColorLike,
   GRADELEVEL extends KMColorGenerator.IGradeLevel = '4',
+  MAX extends KMColorGenerator.IMax = '0.7',
   PREFIX extends string = '',
   SPLITER extends KMColorGenerator.ISpliter = '_',
-  MAX extends KMColorGenerator.IMax = '0.7',
   DARKEN extends KMColorGenerator.IGradeStatus = 'YES',
   LIGHTEN extends KMColorGenerator.IGradeStatus = 'YES',
   ALPHA extends KMColorGenerator.IGradeStatus = 'YES',
@@ -59,12 +60,12 @@ const makeColor = <
   BLACKEN extends KMColorGenerator.IGradeStatus = 'YES'
 >(
   color: COLOR,
-  entryOptions: Partial<KMColorGenerator.IColorOptions<GRADELEVEL, MAX, SPLITER, PREFIX>>,
+  entryOptions: Partial<KMColorGenerator.IColorOptions<GRADELEVEL, MAX, PREFIX, SPLITER>>,
   gradeOptions: Partial<
     KMColorGenerator.IGradeOptions<DARKEN, LIGHTEN, ALPHA, FADE, OPAQUER, WHITEN, BLACKEN>
   >
 ) => {
-  const options: KMColorGenerator.IColorOptions<GRADELEVEL, MAX, SPLITER, PREFIX> = {
+  const options: KMColorGenerator.IColorOptions<GRADELEVEL, MAX, PREFIX, SPLITER> = {
     gradeLevel: '4' as GRADELEVEL,
     max: '0.7' as MAX,
     prefix: '' as PREFIX,
@@ -202,9 +203,9 @@ const makeColor = <
 const makePalette = <
   COLORS extends KMColorGenerator.IPalleteInput,
   GRADELEVEL extends KMColorGenerator.IGradeLevel = '4',
+  MAX extends KMColorGenerator.IMax = '0.7',
   PREFIX extends string = '',
   SPLITER extends KMColorGenerator.ISpliter = '_',
-  MAX extends KMColorGenerator.IMax = '0.7',
   DARKEN extends KMColorGenerator.IGradeStatus = 'YES',
   LIGHTEN extends KMColorGenerator.IGradeStatus = 'YES',
   ALPHA extends KMColorGenerator.IGradeStatus = 'YES',
@@ -218,8 +219,8 @@ const makePalette = <
     KMColorGenerator.IPaletteOptions<
       GRADELEVEL,
       MAX,
-      SPLITER,
       PREFIX,
+      SPLITER,
       DARKEN,
       LIGHTEN,
       ALPHA,
@@ -233,8 +234,8 @@ const makePalette = <
   let options: KMColorGenerator.IPaletteOptions<
     GRADELEVEL,
     MAX,
-    SPLITER,
     PREFIX,
+    SPLITER,
     DARKEN,
     LIGHTEN,
     ALPHA,
@@ -245,8 +246,8 @@ const makePalette = <
   > = {
     gradeLevel: '4',
     max: '0.7',
-    spliter: '_',
     prefix: '' as PREFIX,
+    spliter: '_',
     darken: 'YES',
     lighten: 'YES',
     alpha: 'YES',
@@ -263,9 +264,9 @@ const makePalette = <
       typeof makeColor<
         KMColorGenerator.IColorLike,
         GRADELEVEL,
+        MAX,
         PREFIX,
         SPLITER,
-        MAX,
         DARKEN,
         LIGHTEN,
         ALPHA,
@@ -335,6 +336,7 @@ const makeCssVariablesFromPalette = (palette: ReturnType<typeof makePalette>) =>
   return output;
 };
 
+// @ts-ignore
 const paletteToCssVariables = (palette: ReturnType<typeof makePalette>) => {
   return {
     asObject: () => makeCssVariablesFromPalette(palette),
@@ -342,110 +344,210 @@ const paletteToCssVariables = (palette: ReturnType<typeof makePalette>) => {
   };
 };
 
-// type ITheme<PALETTE extends ReturnType<typeof makePalette>> = {
-//   palette: PALETTE;
-//   // comming soon
-//   // shadows: Record<string, string>;
-//   // typography: Record<string, string>;
-//   // breakpoints: Record<string, string>;
-//   // spacing: Record<string, string>;
-//   // borderRadius: Record<string, string>;
-//   // transitions: Record<string, string>;
-// };
+type IThemeEntry<NAME extends string, COLORS extends KMColorGenerator.IPalleteInput> = {
+  [key in NAME]: {
+    dark: COLORS;
+    light: COLORS;
+  };
+};
 
-// type IThemeEntry<
-//   PALETTE extends ReturnType<typeof makePalette>,
-//   NAMES extends string = string
-// > = Record<NAMES, ITheme<PALETTE>>;
+type IThemeOutput<
+  THEME extends IThemeEntry<NAME, COLORS>,
+  NAME extends string,
+  COLORS extends KMColorGenerator.IPalleteInput,
+  GRADELEVEL extends KMColorGenerator.IGradeLevel = '4',
+  MAX extends KMColorGenerator.IMax = '0.7',
+  PREFIX extends string = '',
+  SPLITER extends KMColorGenerator.ISpliter = '_',
+  DARKEN extends KMColorGenerator.IGradeStatus = 'YES',
+  LIGHTEN extends KMColorGenerator.IGradeStatus = 'YES',
+  ALPHA extends KMColorGenerator.IGradeStatus = 'YES',
+  FADE extends KMColorGenerator.IGradeStatus = 'YES',
+  OPAQUER extends KMColorGenerator.IGradeStatus = 'YES',
+  WHITEN extends KMColorGenerator.IGradeStatus = 'YES',
+  BLACKEN extends KMColorGenerator.IGradeStatus = 'YES'
+> = {
+  [key in keyof THEME]: {
+    dark: ReturnType<
+      typeof makePalette<
+        THEME[key]['dark'],
+        GRADELEVEL,
+        MAX,
+        PREFIX,
+        SPLITER,
+        DARKEN,
+        LIGHTEN,
+        ALPHA,
+        FADE,
+        OPAQUER,
+        WHITEN,
+        BLACKEN
+      >
+    >;
+    light: ReturnType<
+      typeof makePalette<
+        THEME[key]['light'],
+        GRADELEVEL,
+        MAX,
+        PREFIX,
+        SPLITER,
+        DARKEN,
+        LIGHTEN,
+        ALPHA,
+        FADE,
+        OPAQUER,
+        WHITEN,
+        BLACKEN
+      >
+    >;
+  };
+};
+// type IThemeOutput<NAME extends string, COLORS extends KMColorGenerator.IPalleteInput,
+//   GRADELEVEL extends KMColorGenerator.IGradeLevel = '4',
+//   MAX extends KMColorGenerator.IMax = '0.7',
+//   PREFIX extends string = '',
+//   SPLITER extends KMColorGenerator.ISpliter = '_',
+//   DARKEN extends KMColorGenerator.IGradeStatus = 'YES',
+//   LIGHTEN extends KMColorGenerator.IGradeStatus = 'YES',
+//   ALPHA extends KMColorGenerator.IGradeStatus = 'YES',
+//   FADE extends KMColorGenerator.IGradeStatus = 'YES',
+//   OPAQUER extends KMColorGenerator.IGradeStatus = 'YES',
+//   WHITEN extends KMColorGenerator.IGradeStatus = 'YES',
+//   BLACKEN extends KMColorGenerator.IGradeStatus = 'YES'
+// > = {
+//     [key in NAME]: {
+//       dark: string
+//       // light: ReturnType<typeof makePalette<COLORS,
+//       //   GRADELEVEL,
+//       //   MAX,
+//       //   PREFIX,
+//       //   SPLITER,
+//       //   DARKEN,
+//       //   LIGHTEN,
+//       //   ALPHA,
+//       //   FADE,
+//       //   OPAQUER,
+//       //   WHITEN,
+//       //   BLACKEN
+//       // >>,
+//     }
+//   }
 
-// const makeThemes = <PALETTE extends ReturnType<typeof makePalette>, NAMES extends string>(
-//   themes: IThemeEntry<PALETTE, NAMES>
-// ) => {
-//   return themes;
-// };
-const registerThemes = <
-  OBJECT extends Object,
-  THEMES extends keyof OBJECT,
-  THEMETYPES extends keyof OBJECT[THEMES]
+const makeThemes = <
+  COLORS extends KMColorGenerator.IPalleteInput,
+  PREFIX extends string = '',
+  SPLITER extends KMColorGenerator.ISpliter = '_',
+  MAX extends KMColorGenerator.IMax = '0.7',
+  DARKEN extends KMColorGenerator.IGradeStatus = 'YES',
+  LIGHTEN extends KMColorGenerator.IGradeStatus = 'YES',
+  ALPHA extends KMColorGenerator.IGradeStatus = 'YES',
+  FADE extends KMColorGenerator.IGradeStatus = 'NO',
+  OPAQUER extends KMColorGenerator.IGradeStatus = 'NO',
+  WHITEN extends KMColorGenerator.IGradeStatus = 'NO',
+  BLACKEN extends KMColorGenerator.IGradeStatus = 'NO',
+  GRADELEVEL extends KMColorGenerator.IGradeLevel = '4',
+  THEME_NAME extends string = string,
+  THEMES_ENTRY extends IThemeEntry<THEME_NAME, COLORS> = IThemeEntry<THEME_NAME, COLORS>,
+  THEMES_OUTPUT extends IThemeOutput<
+    THEMES_ENTRY,
+    THEME_NAME,
+    COLORS,
+    GRADELEVEL,
+    MAX,
+    PREFIX,
+    SPLITER,
+    DARKEN,
+    LIGHTEN,
+    ALPHA,
+    FADE,
+    OPAQUER,
+    WHITEN,
+    BLACKEN
+  > = IThemeOutput<
+    THEMES_ENTRY,
+    THEME_NAME,
+    COLORS,
+    GRADELEVEL,
+    MAX,
+    PREFIX,
+    SPLITER,
+    DARKEN,
+    LIGHTEN,
+    ALPHA,
+    FADE,
+    OPAQUER,
+    WHITEN,
+    BLACKEN
+  >
+  // @ts-ignore
 >(
-  entryThemes: OBJECT,
-  defaultTheme: THEMES,
-  defaultThemeType: THEMETYPES
+  entryThemes: THEMES_ENTRY,
+  defaultTheme: keyof THEMES_ENTRY,
+  defaultThemeType: 'dark' | 'light',
+  entryOptions: Partial<
+    KMColorGenerator.IPaletteOptions<
+      GRADELEVEL,
+      MAX,
+      PREFIX,
+      SPLITER,
+      DARKEN,
+      LIGHTEN,
+      ALPHA,
+      FADE,
+      OPAQUER,
+      WHITEN,
+      BLACKEN
+    >
+  >
 ) => {
-  const activeTheme = ref<THEMES>(defaultTheme);
-  const activeThemeType = ref<THEMETYPES>(defaultThemeType);
+  // @ts-ignore
+  const activeThemeName = ref<keyof THEMES_ENTRY>(defaultTheme);
+  // @ts-ignore
+  const activeThemeType = ref<'dark' | 'light'>(defaultThemeType);
+  // @ts-ignore
+  let output = {} as THEMES_OUTPUT;
 
-  let variables = {};
-  for (const themeName in entryThemes) {
-    if (Object.prototype.hasOwnProperty.call(entryThemes, themeName)) {
-      let themeType = entryThemes[themeName];
+  const setActiveTheme = (name: keyof THEMES_ENTRY) => {
+    return activeThemeName.setHard(name);
+  };
+  const setActiveThemeType = (type: 'dark' | 'light') => {
+    return activeThemeType.setHard(type);
+  };
+  // @ts-ignore
+
+  const activeTheme = computed({ activeThemeName, activeThemeType }, () => {
+    return output[activeThemeName.value]?.[
+      activeThemeType.value
+    ] as THEMES_OUTPUT[keyof THEMES_OUTPUT]['dark'] & THEMES_OUTPUT[keyof THEMES_OUTPUT]['light'];
+  });
+
+  for (const themes in entryThemes) {
+    if (Object.prototype.hasOwnProperty.call(entryThemes, themes)) {
       // @ts-ignore
-      variables[themeName] = {};
-      for (const themeKey in themeType) {
-        if (Object.prototype.hasOwnProperty.call(themeType, themeKey)) {
-          const themeValue = themeType[themeKey];
+      output[themes] = {};
+      const themeListInTypes = entryThemes[themes];
+      for (const themeType in themeListInTypes) {
+        if (Object.prototype.hasOwnProperty.call(themeListInTypes, themeType)) {
           // @ts-ignore
-          variables[themeName][themeKey] = paletteToCssVariables(themeValue);
+          output[themes][themeType] = makePalette(themeListInTypes[themeType], entryOptions);
+
+          // const element = themeListInTypes[themeType];
         }
       }
     }
   }
-  // let variables = {
-  //   wood: {
-  //     dark: kmColor.paletteToCssVariables(themes.wood.dark),
-  //     light: kmColor.paletteToCssVariables(themes.wood.light),
-  //   },
-  //   pastele: {
-  //     dark: kmColor.paletteToCssVariables(themes.pastele.dark),
-  //     light: kmColor.paletteToCssVariables(themes.pastele.light),
-  //   },
-  // }
-  return {
-    activeTheme,
-    activeThemeType,
-    activeThemeVariables: computed<ReturnType<typeof paletteToCssVariables>>(
-      { activeTheme, activeThemeType },
-      () => {
-        // @ts-ignore
-        return variables[activeTheme.value][activeThemeType.value] as ReturnType<
-          typeof paletteToCssVariables
-        >;
-      }
-    ),
-    setTheme(theme: THEMES) {
-      activeTheme.setHard(theme);
-    },
-    setThemeType(themeType: THEMETYPES) {
-      activeThemeType.setHard(themeType);
-    },
-    getActiveTheme() {
-      return entryThemes[activeTheme.value][activeThemeType.value];
-    },
-    getActiveThemeType() {
-      return activeThemeType.value;
-    },
-    getActiveThemeName() {
-      return activeTheme.value;
-    },
 
-    getThemeNameList() {
-      return Object.keys(entryThemes).map((theme) => {
-        return theme;
-      }) as THEMES[];
-    },
-    getThemeTypeList() {
-      // @ts-ignore
-      return Object.keys(entryThemes[activeTheme.value]).map((themeType) => {
-        return themeType;
-      }) as THEMETYPES[];
-    },
+  setActiveTheme(defaultTheme);
+  setActiveThemeType(defaultThemeType);
+  return {
+    themes: output,
+    setActiveTheme,
+    setActiveThemeType,
+    activeTheme,
   };
 };
 
 export default {
-  // makeColor,
   makePalette,
-  registerThemes,
-  // paletteToCssVariables,
-  // makeThemes,
+  makeThemes,
 };

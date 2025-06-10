@@ -199,13 +199,13 @@ export namespace KMColorGenerator {
   export type IColorOptions<
     GRADELEVEL extends IGradeLevel = '4',
     MAX extends IMax = '0.7',
-    SPLITER extends ISpliter = '_',
-    PREFIX extends string = ''
+    PREFIX extends string = '',
+    SPLITER extends ISpliter = '_'
   > = {
     gradeLevel: GRADELEVEL | IGradeLevel;
     max: MAX | IMax;
-    spliter: SPLITER | ISpliter;
     prefix: PREFIX;
+    spliter: SPLITER | ISpliter;
   };
 
   export type IColorOutput<
@@ -231,8 +231,8 @@ export namespace KMColorGenerator {
   export type IPaletteOptions<
     GRADELEVEL extends IGradeLevel = '4',
     MAX extends IMax = '0.7',
-    SPLITER extends ISpliter = '_',
     PREFIX extends string = '',
+    SPLITER extends ISpliter = '_',
     DARKEN extends IGradeStatus = 'YES',
     LIGHTEN extends IGradeStatus = 'YES',
     ALPHA extends IGradeStatus = 'YES',
@@ -243,8 +243,8 @@ export namespace KMColorGenerator {
   > = {
     gradeLevel: GRADELEVEL | IGradeLevel;
     max: MAX | IMax;
-    spliter: SPLITER | ISpliter;
     prefix: PREFIX;
+    spliter: SPLITER | ISpliter;
     darken: DARKEN | IGradeStatus;
     lighten: LIGHTEN | IGradeStatus;
     alpha: ALPHA | IGradeStatus;
